@@ -48,7 +48,9 @@ while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
-        print("Cargando información de los archivos ....")
+        print("Cargando información del archivo ....")
+        cont = controller.init() 
+        controller.loadData(cont)
 
     elif int(inputs[0]) == 2:
         pass
