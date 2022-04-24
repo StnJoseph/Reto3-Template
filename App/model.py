@@ -45,19 +45,13 @@ los mismos.
 # ==============================
 
 def newAnalyzer():
-    """ Inicializa el analizador
-
-    Crea una lista vacia para guardar todos los crimenes
-    Se crean indices (Maps) por los siguientes criterios:
-    -Clubs
-
-    Retorna el analizador inicializado.
-    """
-    analyzer = {'clubsName': None
+    analyzer = {'players': None, 
+                'clubsName': None
                 }
-
-    analyzer['clubsName'] = mp.newMap(10000,
-                                   maptype='CHAINING',
+    
+    analyzer['players'] =  lt.newList('SINGLE_LINKED', comparePlayers)
+    analyzer['clubsName'] = mp.newMap(185,
+                                   maptype='PROBING',
                                    loadfactor=4,
                                    comparefunction=compareClubsName)
 
@@ -69,31 +63,27 @@ def newAnalyzer():
 # ==============================
 
 def addPlayer(analyzer, player):
-    """
-    """
+    lt.addLast(analyzer['players'], player)
+    return analyzer
+
+def addClubPlayer(analyzer, player):
     updateClubIndex(analyzer['clubsName'], player)
     return analyzer
 
 
 def updateClubIndex(map, player):
-    """
-    Se toma la fecha del crimen y se busca si ya existe en el arbol
-    dicha fecha.  Si es asi, se adiciona a su lista de crimenes
-    y se actualiza el indice de tipos de crimenes.
-
-    Si no se encuentra creado un nodo para esa fecha en el arbol
-    se crea y se actualiza el indice de tipos de crimenes
-    """
-    entry = mp.get(map, player['club_name'])                #Obtiene pareja llave valor del HASH para revisar si existe o no#
+    entry = mp.get(map, player['club_name'])                    #Obtiene pareja llave valor del HASH para revisar si existe o no#
     if entry is None:           
-        datentry = om.newMap(omaptype = 'RBT',              #Creción del mapa#
+        datentry = om.newMap(omaptype = 'RBT',                  #Creción del mapa#
                             comparefunction = compareDates)
-        playerInfo = lt.newList()                           #Creación de la list#
-        lt.addLast(playerInfo, player)                      #Adicion de jugador a la lista#
-        om.put(datentry, player['club_joined'], playerInfo) #Adicion de la lista con los jugadores al arbol#
+        
+        mp.put(map, player['club_name'], datentry)                            
+        playerInfo = lt.newList()                               #Creación de la list#
+        lt.addLast(playerInfo, player)                          #Adicion de jugador a la lista#
+        om.put(datentry, player['club_joined'], playerInfo)     #Adicion de la lista con los jugadores al arbol#
     else:
-        datentry = me.getValue(entry)                       #Sacamos valor ya existente#
-        fecha = om.get(datentry, player['club_joined'])     #Obtenemos la fecha#
+        datentry = me.getValue(entry)                           #Sacamos valor ya existente#
+        fecha = om.get(datentry, player['club_joined'])         #Obtenemos la fecha#
 
         if fecha is None:
             playerInfo = lt.newList()                           #Lista que contiene la info del jugador en el respectivo nodo#
@@ -109,6 +99,196 @@ def updateClubIndex(map, player):
 # Funciones para creacion de datos
 # ==============================
 
+def Init_Finit_Players(analyzer):
+    #sizePlayers = playersSize(analyzer)
+    list = []
+    list_first = []
+    list_last = []
+
+    for index in range(1,6):
+        initList = []
+        firstPlayer = lt.getElement(analyzer['players'], index)
+
+        name = firstPlayer['long_name']
+        age = firstPlayer['age']
+        height_cm = firstPlayer['height_cm']
+        weight_kg = firstPlayer['weight_kg']
+        nationality_name = firstPlayer['nationality_name']
+
+        overall = firstPlayer['overall']
+
+        value_eur = firstPlayer['value_eur']
+        wage_eur = firstPlayer['wage_eur']
+        release_clause_eur = firstPlayer['release_clause_eur']
+
+        league_name = firstPlayer['league_name']
+        club_name = firstPlayer['club_name']
+        club_joined = firstPlayer['club_joined']
+
+        #club_position = firstPlayer['club_position']
+        #player_tags = firstPlayer['player_tags']
+        #player_traits = firstPlayer['player_traits']
+        #player_url = firstPlayer['player_url']
+
+        initList.append(name)
+        initList.append(age)
+        initList.append(height_cm)
+        initList.append(weight_kg)
+        initList.append(nationality_name)
+
+        initList.append(overall)
+
+        initList.append(value_eur)
+        initList.append(wage_eur)
+        initList.append(release_clause_eur)
+
+        initList.append(league_name)
+        initList.append(club_name)
+        initList.append(club_joined)
+
+        #initList.append(club_position)
+        #initList.append(player_tags)
+        #initList.append(player_traits)
+        #initList.append(player_url)
+
+        list_first.append(initList)
+
+    for indey in range((int(playersSize(analyzer))-4),(int(playersSize(analyzer)+1))):
+        finitList = []
+        lastPlayer = lt.getElement(analyzer['players'], indey)
+
+        name = lastPlayer['long_name']
+        age = lastPlayer['age']
+        height_cm = lastPlayer['height_cm']
+        weight_kg = lastPlayer['weight_kg']
+        nationality_name = lastPlayer['nationality_name']
+
+        overall = lastPlayer['overall']
+
+        value_eur = lastPlayer['value_eur']
+        wage_eur = lastPlayer['wage_eur']
+        release_clause_eur = lastPlayer['release_clause_eur']
+
+        league_name = lastPlayer['league_name']
+        club_name = lastPlayer['club_name']
+        club_joined = lastPlayer['club_joined']
+
+        #club_position = lastPlayer['club_position']
+        #player_tags = lastPlayer['player_tags']
+        #player_traits = lastPlayer['player_traits']
+        #player_url = lastPlayer['player_url']
+
+        finitList.append(name)
+        finitList.append(age)
+        finitList.append(height_cm)
+        finitList.append(weight_kg)
+        finitList.append(nationality_name)
+
+        finitList.append(overall)
+
+        finitList.append(value_eur)
+        finitList.append(wage_eur)
+        finitList.append(release_clause_eur)
+
+        finitList.append(league_name)
+        finitList.append(club_name)
+        finitList.append(club_joined)
+
+        #finitList.append(club_position)
+        #finitList.append(player_tags)
+        #finitList.append(player_traits)
+        #finitList.append(player_url)
+
+        list_last.append(finitList)
+
+    list.append(list_first)
+    list.append(list_last)
+
+    return list
+
+def req1(analyzer, clubName):
+    completeInfo = []
+    cont = 0
+
+    for i in lt.iterator(keySet(mp.get(analyzer['clubsName'], clubName)['value'])):
+        if cont <5:
+            arbol = om.get(mp.get(analyzer['clubsName'], clubName)['value'], i)['value']['first']
+            info = []
+                
+            league_name = arbol['info']['league_name']
+            league_level = arbol['info']['league_level']
+
+            short_name = arbol['info']['short_name']
+            age = arbol['info']['age']
+            dob = arbol['info']['dob']
+            overall = arbol['info']['overall']
+            nationality_name = arbol['info']['nationality_name']
+            value_eur = arbol['info']['value_eur']
+            wage_eur = arbol['info']['wage_eur']
+            release_clause_eur = arbol['info']['release_clause_eur']
+            club_joined = arbol['info']['club_joined']
+            player_positions = arbol['info']['player_positions']
+            club_position = arbol['info']['club_position']
+            player_traits = arbol['info']['player_traits']
+            player_tags = arbol['info']['player_tags']
+                
+            info.append(short_name)
+            info.append(age)
+            info.append(dob)
+            info.append(overall)
+            info.append(nationality_name)
+            info.append(value_eur)
+            info.append(wage_eur)
+            info.append(release_clause_eur)
+            info.append(club_joined)
+            info.append(player_positions)
+            info.append(club_position)
+            info.append(player_traits)
+            info.append(player_tags) 
+            completeInfo.append(info)
+            cont+=1
+
+            if arbol['next'] != None:
+                arbol = arbol['next']
+
+                info = []
+                
+                league_name = arbol['info']['league_name']
+                league_level = arbol['info']['league_level']
+
+                short_name = arbol['info']['short_name']
+                age = arbol['info']['age']
+                dob = arbol['info']['dob']
+                overall = arbol['info']['overall']
+                nationality_name = arbol['info']['nationality_name']
+                value_eur = arbol['info']['value_eur']
+                wage_eur = arbol['info']['wage_eur']
+                release_clause_eur = arbol['info']['release_clause_eur']
+                club_joined = arbol['info']['club_joined']
+                player_positions = arbol['info']['player_positions']
+                club_position = arbol['info']['club_position']
+                player_traits = arbol['info']['player_traits']
+                player_tags = arbol['info']['player_tags']
+                    
+                info.append(short_name)
+                info.append(age)
+                info.append(dob)
+                info.append(overall)
+                info.append(nationality_name)
+                info.append(value_eur)
+                info.append(wage_eur)
+                info.append(release_clause_eur)
+                info.append(club_joined)
+                info.append(player_positions)
+                info.append(club_position)
+                info.append(player_traits)
+                info.append(player_tags) 
+                completeInfo.append(info)
+                cont+=1
+        else:
+            break
+
+    return league_name, league_level, completeInfo
 
 # ==============================
 # Funciones de consulta
@@ -132,8 +312,19 @@ def indexSize(analyzer):
     """
     Numero de elementos en el indice
     """
-    return om.size(analyzer['clubsName'])
+    return om.size(analyzer)
 
+def keySet(analyzer):
+    """
+    Lista de llaves
+    """
+    return om.keySet(analyzer)
+
+def valueSet(analyzer):
+    """
+    Lista de llaves
+    """
+    return om.valueSet(analyzer)
 
 def minKey(analyzer):
     """
@@ -149,31 +340,6 @@ def maxKey(analyzer):
     return om.maxKey(analyzer['clubsName'])
 
 
-def getCrimesByRange(analyzer, initialDate, finalDate):
-    """
-    Retorna el numero de crimenes en un rago de fechas.
-    """
-    lst = om.values(analyzer['dateIndex'], initialDate, finalDate)
-    totcrimes = 0
-    for lstdate in lt.iterator(lst):
-        totcrimes += lt.size(lstdate['lstcrimes'])
-    return totcrimes
-
-
-def getCrimesByRangeCode(analyzer, initialDate, offensecode):
-    """
-    Para una fecha determinada, retorna el numero de crimenes
-    de un tipo especifico.
-    """
-    crimedate = om.get(analyzer['dateIndex'], initialDate)
-    if crimedate['key'] is not None:
-        offensemap = me.getValue(crimedate)['offenseIndex']
-        numoffenses = mp.get(offensemap, offensecode)
-        if numoffenses is not None:
-            return mp.size(me.getValue(numoffenses)['lstoffenses'])
-    return 0
-
-
 # ==============================
 # Funciones de Comparacion
 # ==============================
@@ -184,7 +350,7 @@ def compareIds(id1, id2):
     """
     if (id1 == id2):
         return 0
-    elif id1 > id2:
+    elif id1 < id2:
         return 1
     else:
         return -1
@@ -195,9 +361,9 @@ def compareClubsName(club1, entry):
     Compara dos clubes
     """
     identry = me.getKey(entry)
-    if (int(club1) == int(identry)):
+    if (club1 == identry):
         return 0
-    elif (int(club1) > int(identry)):
+    elif (club1 < identry):
         return 1
     else:
         return -1
@@ -226,6 +392,15 @@ def compareDates(date1, date2):
     else:
         return -1
 
+def comparePlayers(player1, player2):
+    if (player1 == player2):
+        return 0
+    elif player1 > player2:
+        return 1
+    else:
+        return -1
+
 # ==============================
 # Funciones de ordenamiento
 # ==============================
+

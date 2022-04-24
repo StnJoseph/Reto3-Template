@@ -45,8 +45,7 @@ def init():
 
 
 # ==============================
-#  Funciones para la carga de datos y almacenamiento
-#  de datos en los modelos
+#  Funciones para la carga de datos y almacenamiento de datos en los modelos
 # ==============================
 
 def loadData(analyzer):
@@ -54,10 +53,10 @@ def loadData(analyzer):
     Carga los datos de los archivos CSV en el modelo
     """
     playersfile = cf.data_dir + "fifa-players-2022-utf8-small.csv"
-    input_file = csv.DictReader(open(playersfile, encoding="utf-8"),
-                                delimiter=",")
+    input_file = csv.DictReader(open(playersfile, encoding="utf-8"), delimiter=",")
     for player in input_file:
         model.addPlayer(analyzer, player)
+        model.addClubPlayer(analyzer, player)
     return analyzer
 
 # ==============================
@@ -85,6 +84,17 @@ def indexSize(analyzer):
     """
     return model.indexSize(analyzer)
 
+def keySet(analyzer):
+    """
+    Lista de llaves
+    """
+    return model.keySet(analyzer)
+
+def valueSet(analyzer):
+    """
+    Lista de llaves
+    """
+    return model.valueSet(analyzer)
 
 def minKey(analyzer):
     """
@@ -99,26 +109,11 @@ def maxKey(analyzer):
     """
     return model.maxKey(analyzer)
 
+def Init_Finit_Players(analyzer):
+    return model.Init_Finit_Players(analyzer)
 
-def getCrimesByRange(analyzer, initialDate, finalDate):
-    """
-    Retorna el total de crimenes en un rango de fechas
-    """
-    initialDate = datetime.datetime.strptime(initialDate, '%Y-%m-%d')
-    finalDate = datetime.datetime.strptime(finalDate, '%Y-%m-%d')
-    return model.getCrimesByRange(analyzer, initialDate.date(),
-                                  finalDate.date())
-
-
-def getCrimesByRangeCode(analyzer, initialDate,
-                         offensecode):
-    """
-    Retorna el total de crimenes de un tipo especifico en una
-    fecha determinada
-    """
-    initialDate = datetime.datetime.strptime(initialDate, '%Y-%m-%d')
-    return model.getCrimesByRangeCode(analyzer, initialDate.date(),
-                                      offensecode)
+def req1(analyzer, clubName):
+    return model.req1(analyzer, clubName)
 
 
 # ==============================
