@@ -26,6 +26,7 @@ import controller
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
 from DISClib.ADT import orderedmap as om
+import datetime
 assert cf
 
 
@@ -41,8 +42,8 @@ def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
     print("2- Reportar las cinco adquisiciones más recientes de un club")
-    print("3- Req. 2")
-    print("4- Req. 3")
+    print("3- Reportar los jugadores de cierta posición en un rango de desempeño, potencial y salario")
+    print("4- Reportar los jugadores en un rango salarial y con cierta etiqueta")
     print("5- Req. 4")
     print("6- Req. 5")
     print("7- Req. 6")
@@ -72,7 +73,6 @@ while True:
         print('Los 5 ultimos jugadores cargados son: ' + str(controller.Init_Finit_Players(cont)[1]))
         print()
 
-
     elif int(inputs[0]) == 2:
         print("========== Req. 1 Input ==========")
         clubName = input("Nombre del club: ")
@@ -86,7 +86,61 @@ while True:
         print()
         print(controller.req1(cont, clubName)[2])
 
-        #print(mp.get(cont['clubsName'], clubName)['value'])
+    elif int(inputs[0]) == 3:
+        print("========== Req. 2 Input ==========")
+        player_positions = input("Posicion del jugador: ")
+        #overallMin = input("Desempeño minimo: ")
+        #overallMax = input("Desempeño maximo: ")
+        #potentialMin = input("Potencial minimo: ")
+        #potentialMax = input("Potencial maximo: ")
+        #wage_eurMin = input("Salario minimo: ")
+        #wage_eurMax = input("Salario maximo: ")
+        print()
+        print("========== Req. 2 Output ==========")
+        print(mp.get(cont['positionPlayer'], player_positions)['value'])
+        print()
+        print()
+        print(controller.keySet(mp.get(cont['positionPlayer'], player_positions)['value']))
+        print()
+        print()
+        print(controller.valueSet(mp.get(cont['clubsName'], clubName)['value']))
+        
+
+    elif int(inputs[0]) == 4:
+        print("========== Req. 3 Input ==========")
+        wage_eurMin = int(input("Salario minimo: "))
+        wage_eurMax = int(input("Salario maximo: "))
+        player_tags = input("Caracteristica de los jugadores: ")
+        print()
+        print("========== Req. 3 Output ==========")
+        print("Los jugadores de FIFA encontrados entre el rango " + str(wage_eurMin) + " y " + str(wage_eurMax) + " son: " + str(controller.req3(cont, player_tags, wage_eurMin, wage_eurMax)[0]))
+        print()
+        print("Los " + str(controller.req3(cont, player_tags, wage_eurMin, wage_eurMax)[0]) + " jugadores encontrados son: ")
+        print()
+        print(str(controller.req3(cont, player_tags, wage_eurMin, wage_eurMax)[1]))
+        print()
+        
+
+    elif int(inputs[0]) == 5:
+        print("========== Req. 4 Input ==========")
+        playerTrait = input("Caracteristica de los jugadores: ")
+        dobMin =  datetime.date.fromisoformat(input("Fecha de nacimiento minima: "))
+        dobMax = datetime.date.fromisoformat(input("Fecha de nacimiento maxima: "))
+        print()
+        print("========== Req. 4 Output ==========")
+        #print(cont['traitsPlayer'])
+        #print(mp.get(cont['traitsPlayer'], playerTrait)['value'])
+        print("Los jugadores de FIFA encontrados entre el rango " + str(dobMin) + " y " + str(dobMax) + " son: " + str(controller.req4(cont, playerTrait, dobMin, dobMax)))
+        print()
+        print("Los " + str(controller.req4(cont, playerTrait, dobMin, dobMax)[0]) + " jugadores encontrados son: ")
+        print()
+        print(str(controller.req4(cont, playerTrait, dobMin, dobMax)[1]))
+        print()
+  
+    else:
+        sys.exit(0)
+
+#print(mp.get(cont['clubsName'], clubName)['value'])
         #print(controller.indexSize(mp.get(cont['clubsName'], clubName)['value']))
 
         #print(om.get(mp.get(cont['clubsName'], clubName)['value'], "2021-06-30"))
@@ -97,11 +151,18 @@ while True:
         #keys = controller.keySet(mp.get(cont['clubsName'], clubName)['value'])
         #print(controller.valueSet(mp.get(cont['clubsName'], clubName)['value']))
 
-        #om.get(mp.get(cont['clubsName'], clubName)['value'], )
-
         #print(cont['clubsName'])
         #fecha = om.get(datentry, player['club_joined'])     #Obtenemos la fecha#
 
+                
 
-    else:
-        sys.exit(0)
+
+        #print(mp.get(cont['tagsPlayer'], player_tags)['value'])
+        #print(om.values(mapa, wage_eurMin, wage_eurMax))
+        #print(controller.keySet(mp.get(cont['tagsPlayer'], player_tags)['value']))
+        #llavesHash = mp.keySet(cont['tagsPlayer'])
+        #print(llavesHash)
+        #print(om.get(mp.get(cont['tagsPlayer'], player_tags)['value'], 1))
+
+    #a="#Aerial Threat, #Strength"
+    #a.count()

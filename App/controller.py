@@ -57,6 +57,9 @@ def loadData(analyzer):
     for player in input_file:
         model.addPlayer(analyzer, player)
         model.addClubPlayer(analyzer, player)
+        model.addPositionPlayer(analyzer, player)
+        model.addTagsPlayer(analyzer, player)
+        model.addTraitsPlayer(analyzer, player)
     return analyzer
 
 # ==============================
@@ -115,6 +118,11 @@ def Init_Finit_Players(analyzer):
 def req1(analyzer, clubName):
     return model.req1(analyzer, clubName)
 
+def req3(analyzer, player_tags, wage_eurMin, wage_eurMax):
+    return model.req3(analyzer, player_tags, wage_eurMin, wage_eurMax)
+
+def req4(analyzer, playerTrait, dobMin, dobMax):
+    return model.req4(analyzer, playerTrait, dobMin, dobMax)
 
 # ==============================
 # Funciones de ordenamiento
