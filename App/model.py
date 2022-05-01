@@ -25,12 +25,12 @@
  """
 
 
+from genericpath import exists
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import orderedmap as om
 from DISClib.ADT import map as mp
 from DISClib.DataStructures import mapentry as me
-from DISClib.Algorithms.Sorting import shellsort as sa
 import datetime
 assert cf
 
@@ -53,23 +53,38 @@ def newAnalyzer():
                 }
     
     analyzer['players'] =  lt.newList('SINGLE_LINKED', comparePlayers)
-    analyzer['clubsName'] = mp.newMap(1000,
+    analyzer['clubsName'] = mp.newMap(184,
                                    maptype='PROBING',
                                    loadfactor=4,
                                    comparefunction=compareClubsName)
-    analyzer['positionPlayer'] = mp.newMap(1000,
+    analyzer['overallPlayer'] = mp.newMap(184,
                                    maptype='PROBING',
                                    loadfactor=4,
                                    comparefunction=comparePlayerPosition)
-    analyzer['tagsPlayer'] = mp.newMap(1000,
+    analyzer['tagsPlayer'] = mp.newMap(184,
                                    maptype='PROBING',
                                    loadfactor=4,
                                    comparefunction=compareClubsName)
-    analyzer['traitsPlayer'] = mp.newMap(1000,
+    analyzer['traitsPlayer'] = mp.newMap(184,
                                    maptype='PROBING',
                                    loadfactor=4,
                                    comparefunction=compareClubsName)
-
+    analyzer['overall'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['potential'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['value_eur'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['wage_eur'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['age'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['height_cm'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['weight_kg'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+    analyzer['release_clause_eur'] = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
     return analyzer
 
 
@@ -77,136 +92,306 @@ def newAnalyzer():
 # Funciones para agregar informacion al catalogo
 # ==============================
 
-def addPlayer(analyzer, player):
+def addPlayer(analyzer, player):                                #_Init_#
     lt.addLast(analyzer['players'], player)
     return analyzer
 
-def addClubPlayer(analyzer, player):
+def addClubPlayer(analyzer, player):                            #Req1#
     updateClubIndex(analyzer['clubsName'], player)
     return analyzer
 
-def addPositionPlayer(analyzer, player):
-    updatePositionPlayer(analyzer['positionPlayer'], player)
+def addPositionPlayer(analyzer, player):                        #Req2#
+    updateOverallPlayer(analyzer['overallPlayer'], player)
     return analyzer
 
-def addTagsPlayer(analyzer, player):
+def addTagsPlayer(analyzer, player):                            #Req3#
     updateTagsPlayer(analyzer['tagsPlayer'], player)
     return analyzer
 
-def addTraitsPlayer(analyzer, player):
+def addTraitsPlayer(analyzer, player):                          #Req4#
     updateTraitsPlayer(analyzer['traitsPlayer'], player)
     return analyzer
 
-def updateClubIndex(map, player):
+def addHistogramOverall(analyzer, player):                      #Req5#
+    updateOverall(analyzer['overall'], player)
+    return analyzer
+
+def addHistogramPotential(analyzer, player):                    #Req5#
+    updatePotential(analyzer['potential'], player)
+    return analyzer
+
+def addHistogramValue(analyzer, player):                        #Req5#
+    updateValue(analyzer['value_eur'], player)
+    return analyzer
+
+def addHistogramWage(analyzer, player):                         #Req5#
+    updateWage(analyzer['wage_eur'], player)
+    return analyzer
+
+def addHistogramAge(analyzer, player):                          #Req5#
+    updateAge(analyzer['age'], player)
+    return analyzer
+
+def addHistogramHeight(analyzer, player):                       #Req5#
+    updateHeight(analyzer['height_cm'], player)
+    return analyzer
+
+def addHistogramWeight(analyzer, player):                       #Req5#
+    updateWeight(analyzer['weight_kg'], player)
+    return analyzer
+
+def addHistogramRelease(analyzer, player):                      #Req5#
+    updateRelease(analyzer['release_clause_eur'], player)
+    return analyzer
+
+
+
+def updateClubIndex(map, player):                               #Req1#
     date = datetime.date.fromisoformat(player['club_joined'])
-    entry = mp.get(map, player['club_name'])                    #Obtiene pareja llave valor del HASH para revisar si existe o no#
     
-    if entry is None:           
-        datentry = om.newMap(omaptype = 'RBT',                  #Creción del mapa#
-                            comparefunction = compareDates)
+    if player['club_name'] != "":
+        club_name = player['club_name'].replace(" ", "").split(sep=',')
         
-        mp.put(map, player['club_name'], datentry)                            
-        playerInfo = lt.newList()                               #Creación de la list#
-        lt.addLast(playerInfo, player)                          #Adicion de jugador a la lista#
-        om.put(datentry, date, playerInfo)                         #Adicion de la lista con los jugadores al arbol#
-    else:
-        datentry = me.getValue(entry)                           #Sacamos valor ya existente#
-        fecha = om.contains(datentry, date)                        #Obtenemos la fecha#
+        for llave in club_name:
+            entry = mp.get(map, llave) 
 
-        if fecha == False:
-            playerInfo = lt.newList()                           #Lista que contiene la info del jugador en el respectivo nodo#
-            lt.addLast(playerInfo, player)
-            om.put(datentry, date, playerInfo)                     #Creacion de los nodos#
-        else:
-            playerInfo = me.getValue(om.get(datentry, date))
-            lt.addLast(playerInfo, player)                      #Adicion del jugador con la misma fecha de club_joined#
+            if entry is None:           
+                datentry = om.newMap(omaptype = 'RBT',                  #Creción del mapa#
+                                    comparefunction = compareDates)
+                
+                mp.put(map, llave, datentry)                            
+                playerInfo = lt.newList()                               #Creación de la list#
+                lt.addLast(playerInfo, player)                          #Adicion de jugador a la lista#
+                om.put(datentry, date, playerInfo)                         #Adicion de la lista con los jugadores al arbol#
+            else:
+                datentry = me.getValue(entry)                           #Sacamos valor ya existente#
+                fecha = om.contains(datentry, date)                        #Obtenemos la fecha#
+
+                if fecha == False:
+                    playerInfo = lt.newList()                           #Lista que contiene la info del jugador en el respectivo nodo#
+                    lt.addLast(playerInfo, player)
+                    om.put(datentry, date, playerInfo)                     #Creacion de los nodos#
+                else:
+                    playerInfo = me.getValue(om.get(datentry, date))
+                    lt.addLast(playerInfo, player)                      #Adicion del jugador con la misma fecha de club_joined#
 
     return map
 
-def updatePositionPlayer(map, player):                          #Tabla de hash con llave posicion y con arbol como value#
-    overall = int(player['overall'])                            #Llave para el arbol de OVERALL#
-    #potential = int(player['potential'])                        #Llave para el arbol de OVERALL#
-    #wage_eur = int(player['wage_eur'])                          #Llave para el arbol de OVERALL#
-
-    entry = mp.get(map, player['player_positions'])             #Obtiene pareja llave valor del HASH para revisar si existe o no#
-    if entry is None:           
-        datentry = om.newMap(omaptype = 'RBT',                  #Creción del mapa OVERALL#
-                            comparefunction = compareOveralls)
+def updateOverallPlayer(map, player):                           #Req2#
+    overall = int(player['overall'])        
+    if player['player_positions'] != "":
+        player_positions = player['player_positions'].replace(" ", "").split(sep=',')
         
-        mp.put(map, player['player_positions'], datentry)                            
-        """playerInfo = om.newMap(omaptype = 'RBT',             #Creción del mapa de POTENTIAL#
-                            comparefunction = compareDates)                            
-        om.put(playerInfo, player)                              #Player es el POTENTIAL#
-        om.put(datentry, p, playerInfo)                         #p ahora es player['overall']#"""
-        playerInfo = lt.newList()                               
-        lt.addLast(playerInfo, player)                          
-        om.put(datentry, overall, playerInfo)
+        for llave in player_positions:
+            entry = mp.get(map, llave) 
 
-    else:
-        datentry = me.getValue(entry)                           #Sacamos valor ya existente#
-        position = om.contains(datentry, overall)               #Obtenemos la posicion#
+            if entry is None:           
+                datentry = om.newMap(omaptype = 'RBT',                  
+                                    comparefunction = compareIntValues)
+                
+                mp.put(map, llave, datentry)                            
+                playerInfo = lt.newList()                               
+                lt.addLast(playerInfo, player)                          
+                om.put(datentry, overall, playerInfo)
+            else:
+                datentry = me.getValue(entry)                           
+                position = om.contains(datentry, overall)             
 
-        if position == False:
-            playerInfo = lt.newList()                           #Lista que contiene la info del jugador en el respectivo nodo#
-            lt.addLast(playerInfo, player)
-            om.put(datentry, overall, playerInfo)               #Creacion de los nodos#
-        else:
-            playerInfo = me.getValue(om.get(datentry, overall))
-            lt.addLast(playerInfo, player)                      #Adicion del jugador con la misma fecha de club_joined#
+                if position == False:
+                    playerInfo = lt.newList()                           
+                    lt.addLast(playerInfo, player)
+                    om.put(datentry, overall, playerInfo)               
+                else:
+                    playerInfo = me.getValue(om.get(datentry, overall))
+                    lt.addLast(playerInfo, player)                      
 
     return map
 
-def updateTagsPlayer(map, player):                          
-    wage_eur = int(float(player['wage_eur']))                            
-    entry = mp.get(map, player['player_tags'])             
-    
-    if entry is None:           
-        datentry = om.newMap(omaptype = 'RBT',                  
-                            comparefunction = compareWages)
+def updateTagsPlayer(map, player):                              #Req3#
+    wage_eur = int(float(player['wage_eur']))    
+    if player['player_tags'] != "":
+        player_tags = player['player_tags'].replace(" ", "").split(sep=',')
         
-        mp.put(map, player['player_tags'], datentry)            
-        playerInfo = lt.newList()                               
-        lt.addLast(playerInfo, player)                          
-        om.put(datentry, wage_eur, playerInfo)
-    else:
-        datentry = me.getValue(entry)                           
-        wageKey = om.contains(datentry, wage_eur)               
+        for llave in player_tags:
+            entry = mp.get(map, llave)   
+            if llave != "":
+                if entry is None:           
+                    datentry = om.newMap(omaptype = 'RBT',                  
+                                        comparefunction = compareWages)
+                    mp.put(map, llave, datentry)            
+                    playerInfo = lt.newList()                               
+                    lt.addLast(playerInfo, player)                          
+                    om.put(datentry, wage_eur, playerInfo)
+                else:
+                    datentry = me.getValue(entry)                           
+                    wageKey = om.contains(datentry, wage_eur)               
 
-        if wageKey == False:
-            playerInfo = lt.newList()                           
-            lt.addLast(playerInfo, player)
-            om.put(datentry, wage_eur, playerInfo)               
-        else:
-            playerInfo = me.getValue(om.get(datentry, wage_eur))
-            lt.addLast(playerInfo, player)                      
+                    if wageKey == False:
+                        playerInfo = lt.newList()                           
+                        lt.addLast(playerInfo, player)
+                        om.put(datentry, wage_eur, playerInfo)               
+                    else:
+                        playerInfo = me.getValue(om.get(datentry, wage_eur))
+                        lt.addLast(playerInfo, player)                      
 
     return map
 
-def updateTraitsPlayer(map, player):                          
+def updateTraitsPlayer(map, player):                            #Req4#
     dob = datetime.date.fromisoformat(player['dob'])
-    entry = mp.get(map, player['player_traits'])                    
-    
-    if entry is None:           
-        datentry = om.newMap(omaptype = 'RBT',                  
-                            comparefunction = compareDates)
+    if player['player_traits'] != "":
+        player_traits = player['player_traits'].split(sep=', ')
         
-        mp.put(map, player['player_traits'], datentry)                            
-        playerInfo = lt.newList()                               
-        lt.addLast(playerInfo, player)                          
-        om.put(datentry, dob, playerInfo)                       
-    else:
-        datentry = me.getValue(entry)                           
-        fecha = om.contains(datentry, dob)                        
+        for llave in player_traits:
+            entry = mp.get(map, llave) 
+            if llave != "":                  
+                if entry is None:           
+                    datentry = om.newMap(omaptype = 'RBT',                  
+                                        comparefunction = compareDates)
+                    
+                    mp.put(map, llave, datentry)                            
+                    playerInfo = lt.newList()                               
+                    lt.addLast(playerInfo, player)                          
+                    om.put(datentry, dob, playerInfo)                       
+                else:
+                    datentry = me.getValue(entry)                           
+                    fecha = om.contains(datentry, dob)                        
 
-        if fecha == False:
-            playerInfo = lt.newList()                           
-            lt.addLast(playerInfo, player)
-            om.put(datentry, dob, playerInfo)                    
-        else:
-            playerInfo = me.getValue(om.get(datentry, dob))
-            lt.addLast(playerInfo, player)                      
+                    if fecha == False:
+                        playerInfo = lt.newList()                           
+                        lt.addLast(playerInfo, player)
+                        om.put(datentry, dob, playerInfo)                    
+                    else:
+                        playerInfo = me.getValue(om.get(datentry, dob))
+                        lt.addLast(playerInfo, player)                      
 
     return map
+
+def updateOverall(map, player):                                 #Req5#
+    overall = int(player['overall'])
+    exists = om.contains(map, overall) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, overall, playerInfo)
+    else:
+        playerInfo = om.get(map, overall)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updatePotential(map, player):                               #Req5#
+    potential = int(player['potential'])
+    exists = om.contains(map, potential) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, potential, playerInfo)
+    else:
+        playerInfo = om.get(map, potential)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateValue(map, player):                                   #Req5#
+    value_eur = int(float(player['value_eur']))
+    exists = om.contains(map, value_eur) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, value_eur, playerInfo)
+    else:
+        playerInfo = om.get(map, value_eur)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateWage(map, player):                                    #Req5#
+    wage_eur = int(float(player['wage_eur']))
+    exists = om.contains(map, wage_eur) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, wage_eur, playerInfo)
+    else:
+        playerInfo = om.get(map, wage_eur)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateAge(map, player):                                     #Req5#
+    age = int(float(player['age']))
+    exists = om.contains(map, age) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, age, playerInfo)
+    else:
+        playerInfo = om.get(map, age)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateHeight(map, player):                                  #Req5#
+    height_cm = int(float(player['height_cm']))
+    exists = om.contains(map, height_cm) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, height_cm, playerInfo)
+    else:
+        playerInfo = om.get(map, height_cm)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateWeight(map, player):                                  #Req5#
+    weight_kg = int(float(player['weight_kg']))
+    exists = om.contains(map, weight_kg) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, weight_kg, playerInfo)
+    else:
+        playerInfo = om.get(map, weight_kg)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateWeight(map, player):                                  #Req5#
+    weight_kg = int(float(player['weight_kg']))
+    exists = om.contains(map, weight_kg) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, weight_kg, playerInfo)
+    else:
+        playerInfo = om.get(map, weight_kg)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
+def updateRelease(map, player):                                 #Req5#
+    release_clause_eur = int(float(player['release_clause_eur']))
+    exists = om.contains(map, release_clause_eur) 
+
+    if exists == False:
+        playerInfo = lt.newList()                               
+        lt.addLast(playerInfo, player)                          
+        om.put(map, release_clause_eur, playerInfo)
+    else:
+        playerInfo = om.get(map, release_clause_eur)['value']
+        lt.addLast(playerInfo, player)
+
+    return map
+
 
 # ==============================
 # Funciones para creacion de datos
@@ -222,51 +407,27 @@ def Init_Finit_Players(analyzer):
         initList = []
         firstPlayer = lt.getElement(analyzer['players'], index)
 
-        name = firstPlayer['long_name']
-        age = firstPlayer['age']
-        height_cm = firstPlayer['height_cm']
-        weight_kg = firstPlayer['weight_kg']
-        nationality_name = firstPlayer['nationality_name']
+        initList.append(firstPlayer['long_name'])
+        initList.append(firstPlayer['age'])
+        initList.append(firstPlayer['height_cm'])
+        initList.append(firstPlayer['weight_kg'])
+        initList.append(firstPlayer['nationality_name'])
+        initList.append(firstPlayer['overall'])
+        initList.append(firstPlayer['value_eur'])
+        initList.append(firstPlayer['wage_eur'])
+        initList.append(firstPlayer['release_clause_eur'])
+        initList.append(firstPlayer['league_name'])
+        initList.append(firstPlayer['club_name'])
+        initList.append(firstPlayer['club_joined'])
+        initList.append(firstPlayer['club_position'])
 
-        overall = firstPlayer['overall']
+        if firstPlayer['player_tags'] == "" or firstPlayer['player_tags'] == " ":
+            initList.append("Unknown")
+        else:
+            initList.append(firstPlayer['player_tags'])
 
-        value_eur = firstPlayer['value_eur']
-        wage_eur = firstPlayer['wage_eur']
-        release_clause_eur = firstPlayer['release_clause_eur']
-
-        league_name = firstPlayer['league_name']
-        club_name = firstPlayer['club_name']
-        club_joined = firstPlayer['club_joined']
-
-        club_position = firstPlayer['club_position']
-        player_tags = firstPlayer['player_tags']
-
-        if player_tags == "" or player_tags == " ":
-            player_tags = "Unknown"
-
-        player_traits = firstPlayer['player_traits']
-        player_url = firstPlayer['player_url']
-
-        initList.append(name)
-        initList.append(age)
-        initList.append(height_cm)
-        initList.append(weight_kg)
-        initList.append(nationality_name)
-
-        initList.append(overall)
-
-        initList.append(value_eur)
-        initList.append(wage_eur)
-        initList.append(release_clause_eur)
-
-        initList.append(league_name)
-        initList.append(club_name)
-        initList.append(club_joined)
-
-        initList.append(club_position)
-        initList.append(player_tags)
-        initList.append(player_traits)
-        initList.append(player_url)
+        initList.append(firstPlayer['player_traits'])
+        initList.append(firstPlayer['player_url'])
 
         list_first.append(initList)
 
@@ -274,148 +435,127 @@ def Init_Finit_Players(analyzer):
         finitList = []
         lastPlayer = lt.getElement(analyzer['players'], indey)
 
-        name = lastPlayer['long_name']
-        age = lastPlayer['age']
-        height_cm = lastPlayer['height_cm']
-        weight_kg = lastPlayer['weight_kg']
-        nationality_name = lastPlayer['nationality_name']
+        finitList.append(lastPlayer['long_name'])
+        finitList.append(lastPlayer['age'])
+        finitList.append(lastPlayer['height_cm'])
+        finitList.append(lastPlayer['weight_kg'])
+        finitList.append(lastPlayer['nationality_name'])
+        finitList.append(lastPlayer['overall'])
+        finitList.append(lastPlayer['value_eur'])
+        finitList.append(lastPlayer['wage_eur'])
+        finitList.append(lastPlayer['release_clause_eur'])
+        finitList.append(lastPlayer['league_name'])
+        finitList.append(lastPlayer['club_name'])
+        finitList.append(lastPlayer['club_joined'])
+        finitList.append(lastPlayer['club_position'])
 
-        overall = lastPlayer['overall']
+        if lastPlayer['player_tags'] == "" or lastPlayer['player_tags'] == " ":
+            finitList.append("Unknown")
+        else:
+            finitList.append(lastPlayer['player_tags'])
 
-        value_eur = lastPlayer['value_eur']
-        wage_eur = lastPlayer['wage_eur']
-        release_clause_eur = lastPlayer['release_clause_eur']
-
-        league_name = lastPlayer['league_name']
-        club_name = lastPlayer['club_name']
-        club_joined = lastPlayer['club_joined']
-
-        club_position = lastPlayer['club_position']
-        player_tags = lastPlayer['player_tags']
-
-        if player_tags == "" or player_tags == " ":
-            player_tags = "Unknown"
-
-        player_traits = lastPlayer['player_traits']
-        player_url = lastPlayer['player_url']
-
-        finitList.append(name)
-        finitList.append(age)
-        finitList.append(height_cm)
-        finitList.append(weight_kg)
-        finitList.append(nationality_name)
-
-        finitList.append(overall)
-
-        finitList.append(value_eur)
-        finitList.append(wage_eur)
-        finitList.append(release_clause_eur)
-
-        finitList.append(league_name)
-        finitList.append(club_name)
-        finitList.append(club_joined)
-
-        finitList.append(club_position)
-        finitList.append(player_tags)
-        finitList.append(player_traits)
-        finitList.append(player_url)
+        finitList.append(lastPlayer['player_tags'])
+        finitList.append(lastPlayer['player_traits'])
+        finitList.append(lastPlayer['player_url'])
 
         list_last.append(finitList)
 
     list.append(list_first)
     list.append(list_last)
-
     return list
 
 def req1(analyzer, clubName):
     completeInfo = []
     cont = 0
-
     for i in lt.iterator(keySet(mp.get(analyzer['clubsName'], clubName)['value'])):
         if cont <5:
             arbol = om.get(mp.get(analyzer['clubsName'], clubName)['value'], i)['value']['first']
-            info = []
-                
+            info = []   
             league_name = arbol['info']['league_name']
             league_level = arbol['info']['league_level']
-
-            short_name = arbol['info']['short_name']
-            age = arbol['info']['age']
-            dob = arbol['info']['dob']
-            overall = arbol['info']['overall']
-            nationality_name = arbol['info']['nationality_name']
-            value_eur = arbol['info']['value_eur']
-            wage_eur = arbol['info']['wage_eur']
-            release_clause_eur = arbol['info']['release_clause_eur']
-            club_joined = arbol['info']['club_joined']
-            player_positions = arbol['info']['player_positions']
-            club_position = arbol['info']['club_position']
-            player_traits = arbol['info']['player_traits']
-            player_tags = arbol['info']['player_tags']
-
-            if player_tags == "" or player_tags == " ":
-                player_tags = "Unknown"
                 
-            info.append(short_name)
-            info.append(age)
-            info.append(dob)
-            info.append(overall)
-            info.append(nationality_name)
-            info.append(value_eur)
-            info.append(wage_eur)
-            info.append(release_clause_eur)
-            info.append(club_joined)
-            info.append(player_positions)
-            info.append(club_position)
-            info.append(player_traits)
-            info.append(player_tags) 
+            info.append(arbol['info']['short_name'])
+            info.append(arbol['info']['age'])
+            info.append(arbol['info']['dob'])
+            info.append(arbol['info']['overall'])
+            info.append(arbol['info']['nationality_name'])
+            info.append(arbol['info']['value_eur'])
+            info.append(arbol['info']['wage_eur'])
+            info.append(arbol['info']['release_clause_eur'])
+            info.append(arbol['info']['club_joined'])
+            info.append(arbol['info']['player_positions'])
+            info.append(arbol['info']['club_position'])
+            info.append(arbol['info']['player_traits'])
+
+            if arbol['info']['player_tags'] == "" or arbol['info']['player_tags'] == " ":
+                info.append('Unknown') 
+            else:
+                info.append(arbol['info']['player_tags']) 
+
             completeInfo.append(info)
             cont+=1
 
             if arbol['next'] != None:
                 arbol = arbol['next']
-
                 info = []
-                
                 league_name = arbol['info']['league_name']
                 league_level = arbol['info']['league_level']
-
-                short_name = arbol['info']['short_name']
-                age = arbol['info']['age']
-                dob = arbol['info']['dob']
-                overall = arbol['info']['overall']
-                nationality_name = arbol['info']['nationality_name']
-                value_eur = arbol['info']['value_eur']
-                wage_eur = arbol['info']['wage_eur']
-                release_clause_eur = arbol['info']['release_clause_eur']
-                club_joined = arbol['info']['club_joined']
-                player_positions = arbol['info']['player_positions']
-                club_position = arbol['info']['club_position']
-                player_traits = arbol['info']['player_traits']
-                player_tags = arbol['info']['player_tags']
-
-                if player_tags == "" or player_tags == " ":
-                    player_tags = "Unknown"
                     
-                info.append(short_name)
-                info.append(age)
-                info.append(dob)
-                info.append(overall)
-                info.append(nationality_name)
-                info.append(value_eur)
-                info.append(wage_eur)
-                info.append(release_clause_eur)
-                info.append(club_joined)
-                info.append(player_positions)
-                info.append(club_position)
-                info.append(player_traits)
-                info.append(player_tags) 
+                info.append(arbol['info']['short_name'])
+                info.append(arbol['info']['age'])
+                info.append(arbol['info']['dob'])
+                info.append(arbol['info']['overall'])
+                info.append(arbol['info']['nationality_name'])
+                info.append(arbol['info']['value_eur'])
+                info.append(arbol['info']['wage_eur'])
+                info.append(arbol['info']['release_clause_eur'])
+                info.append(arbol['info']['club_joined'])
+                info.append(arbol['info']['player_positions'])
+                info.append(arbol['info']['club_position'])
+                info.append(arbol['info']['player_traits'])
+
+                if arbol['info']['player_tags'] == "" or arbol['info']['player_tags'] == " ":
+                    info.append('Unknown') 
+                else:
+                    info.append(arbol['info']['player_tags']) 
+
                 completeInfo.append(info)
                 cont+=1
         else:
             break
 
     return league_name, league_level, completeInfo
+
+def req2(analyzer, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax):
+    arbol = mp.get(analyzer['overallPlayer'], player_positions)['value']
+    valores = om.values(arbol, overallMin, overallMax)
+    completeInfo = []
+        
+    for i in lt.iterator(valores):
+        data = i['first']['info']
+
+        if int(data['potential']) >= potentialMin and int(data['potential']) <= potentialMax and int(float(data['wage_eur'])) >= wage_eurMin and int(float(data['wage_eur'])) <= wage_eurMax:
+            info = []
+                        
+            info.append(data['short_name'])
+            info.append(data['age'])
+            info.append(data['dob'])
+            info.append(data['nationality_name'])
+            info.append(data['value_eur'])
+            info.append(data['wage_eur'])
+            info.append(data['release_clause_eur'])
+            info.append(data['potential'])
+            info.append(data['overall'])
+            info.append(data['player_positions'])
+            info.append(data['player_traits'])
+
+            if data['player_tags'] == "" or data['player_tags'] == " ":
+                info.append('Unknown') 
+            else:
+                info.append(data['player_tags']) 
+
+            completeInfo.append(info)
+    return completeInfo
 
 def req3(analyzer, player_tags, wage_eurMin, wage_eurMax):
     mapa = mp.get(analyzer['tagsPlayer'], player_tags)['value']
@@ -432,39 +572,26 @@ def req3(analyzer, player_tags, wage_eurMin, wage_eurMax):
     for j in lt.iterator(rangeValues):
         data = j['first']['info']
         info = []
-                
-        long_name = data['long_name']
-        age = data['age']
-        dob = data['dob']
-        nationality_name = data['nationality_name']
-        value_eur = data['value_eur']
-        wage_eur = data['wage_eur']
-        club_name = data['club_name']
-        league_name = data['league_name']
-        potential = data['potential']
-        overall = data['overall']
-        player_positions = data['player_positions']
-        player_traits = data['player_traits']
-        player_tags = data['player_tags']
+                                
+        info.append(data['long_name'])
+        info.append(data['age'])
+        info.append(data['dob'])
+        info.append(data['nationality_name'])
+        info.append(data['value_eur'])
+        info.append(data['wage_eur'])
+        info.append(data['club_name'])
+        info.append(data['league_name'])
+        info.append(data['potential'])
+        info.append(data['overall'])
+        info.append(data['player_positions'])
+        info.append(data['player_traits'])
 
-        if player_tags == "" or player_tags == " ":
-            player_tags = "Unknown"
-                
-        info.append(long_name)
-        info.append(age)
-        info.append(dob)
-        info.append(nationality_name)
-        info.append(value_eur)
-        info.append(wage_eur)
-        info.append(club_name)
-        info.append(league_name)
-        info.append(potential)
-        info.append(overall)
-        info.append(player_positions)
-        info.append(player_traits)
-        info.append(player_tags) 
+        if data['player_tags'] == "" or data['player_tags'] == " ":
+                info.append('Unknown') 
+        else:
+            info.append(data['player_tags'])
+
         completeInfo.append(info)
-
     return playersNum, completeInfo
 
 def req4(analyzer, playerTrait, dobMin, dobMax):
@@ -483,35 +610,25 @@ def req4(analyzer, playerTrait, dobMin, dobMax):
         data = j['first']['info']
         info = []
                 
-        long_name = data['long_name']
-        age = data['age']
-        dob = data['dob']
-        nationality_name = data['nationality_name']
-        value_eur = data['value_eur']
-        wage_eur = data['wage_eur']
-        club_name = data['club_name']
-        league_name = data['league_name']
-        potential = data['potential']
-        overall = data['overall']
-        player_positions = data['player_positions']
-        player_traits = data['player_traits']
-        player_tags = data['player_tags']
-                
-        info.append(long_name)
-        info.append(age)
-        info.append(dob)
-        info.append(nationality_name)
-        info.append(value_eur)
-        info.append(wage_eur)
-        info.append(club_name)
-        info.append(league_name)
-        info.append(potential)
-        info.append(overall)
-        info.append(player_positions)
-        info.append(player_traits)
-        info.append(player_tags) 
-        completeInfo.append(info)
+        info.append(data['long_name'])
+        info.append(data['age'])
+        info.append(data['dob'])
+        info.append(data['nationality_name'])
+        info.append(data['value_eur'])
+        info.append(data['wage_eur'])
+        info.append(data['club_name'])
+        info.append(data['league_name'])
+        info.append(data['potential'])
+        info.append(data['overall'])
+        info.append(data['player_positions'])
+        info.append(data['player_traits'])
 
+        if data['player_tags'] == "" or data['player_tags'] == " ":
+                info.append('Unknown') 
+        else:
+            info.append(data['player_tags'])
+
+        completeInfo.append(info)
     return playersNum, completeInfo
 
 
@@ -553,34 +670,22 @@ def minKey(analyzer):
     """
     Llave mas pequena
     """
-    return om.minKey(analyzer['clubsName'])
+    return om.minKey(analyzer)
 
 def maxKey(analyzer):
     """
     Llave mas grande
     """
-    return om.maxKey(analyzer['clubsName'])
+    return om.maxKey(analyzer)
 
 
 # ==============================
 # Funciones de Comparacion
 # ==============================
 
-def compareIds(id1, id2):
-    """
-    Compara dos crimenes
-    """
-    if (id1 == id2):
-        return 0
-    elif id1 < id2:
-        return 1
-    else:
-        return -1
-
-
 def compareClubsName(club1, entry):
     """
-    Compara dos clubes
+    Compara el nombre de dos clubes
     """
     identry = me.getKey(entry)
     if (club1 == identry):
@@ -602,18 +707,6 @@ def comparePlayerPosition(position1, entry):
     else:
         return -1
 
-def compareOffenses(offense1, offense2):
-    """
-    Compara dos tipos de crimenes
-    """
-    offense = me.getKey(offense2)
-    if (offense1 == offense):
-        return 0
-    elif (offense1 > offense):
-        return 1
-    else:
-        return -1
-
 def compareDates(date1, date2):
     """
     Compara dos fechas
@@ -625,20 +718,20 @@ def compareDates(date1, date2):
     else:
         return -1
 
-def compareOveralls(overall1, overall2):
+def compareIntValues(value1, value2):
     """
-    Compara dos fechas
+    Compara dos valores enteros
     """
-    if (overall1 == overall2):
+    if (value1 == value2):
         return 0
-    elif (overall1 > overall2):
+    elif (value1 > value2):
         return 1
     else:
         return -1
 
 def compareWages(wage1, wage2):
     """
-    Compara dos fechas
+    Compara dos salarios
     """
     if (int(wage1) == int(wage2)):
         return 0
@@ -648,6 +741,9 @@ def compareWages(wage1, wage2):
         return -1
 
 def comparePlayers(player1, player2):
+    """
+    Compara dos jugadores
+    """
     if (player1 == player2):
         return 0
     elif player1 > player2:

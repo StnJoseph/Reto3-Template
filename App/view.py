@@ -44,7 +44,7 @@ def printMenu():
     print("2- Reportar las cinco adquisiciones más recientes de un club")
     print("3- Reportar los jugadores de cierta posición en un rango de desempeño, potencial y salario")
     print("4- Reportar los jugadores en un rango salarial y con cierta etiqueta")
-    print("5- Req. 4")
+    print("5- Reportar los jugadores con un rasgo característico en un periodo de tiempo")
     print("6- Req. 5")
     print("7- Req. 6")
     print("0- Salir")
@@ -85,31 +85,30 @@ while True:
         print("Categoria: " + str(controller.req1(cont, clubName)[1]))
         print()
         print(controller.req1(cont, clubName)[2])
+        print()
+
 
     elif int(inputs[0]) == 3:
         print("========== Req. 2 Input ==========")
-        player_positions = input("Posicion del jugador: ")
-        #overallMin = input("Desempeño minimo: ")
-        #overallMax = input("Desempeño maximo: ")
-        #potentialMin = input("Potencial minimo: ")
-        #potentialMax = input("Potencial maximo: ")
-        #wage_eurMin = input("Salario minimo: ")
-        #wage_eurMax = input("Salario maximo: ")
+        player_positions = input("Posicion del jugador: ").upper()
+        overallMin = int(input("Desempeño minimo: "))
+        overallMax = int(input("Desempeño maximo: "))
+        potentialMin = int(input("Potencial minimo: "))
+        potentialMax = int(input("Potencial maximo: "))
+        wage_eurMin = int(float(input("Salario minimo: ")))
+        wage_eurMax = int(float(input("Salario maximo: ")))
         print()
         print("========== Req. 2 Output ==========")
-        print(mp.get(cont['positionPlayer'], player_positions)['value'])
+        print("Jugadores encontrados en el rango de " + str(player_positions) + " son: ")
         print()
+        print(str(controller.req2(cont, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax)))
         print()
-        print(controller.keySet(mp.get(cont['positionPlayer'], player_positions)['value']))
-        print()
-        print()
-        print(controller.valueSet(mp.get(cont['clubsName'], clubName)['value']))
-        
+
 
     elif int(inputs[0]) == 4:
         print("========== Req. 3 Input ==========")
-        wage_eurMin = int(input("Salario minimo: "))
-        wage_eurMax = int(input("Salario maximo: "))
+        wage_eurMin = int(float(input("Salario minimo: ")))
+        wage_eurMax = int(float(input("Salario maximo: ")))
         player_tags = input("Caracteristica de los jugadores: ")
         print()
         print("========== Req. 3 Output ==========")
@@ -124,12 +123,10 @@ while True:
     elif int(inputs[0]) == 5:
         print("========== Req. 4 Input ==========")
         playerTrait = input("Caracteristica de los jugadores: ")
-        dobMin =  datetime.date.fromisoformat(input("Fecha de nacimiento minima: "))
+        dobMin = datetime.date.fromisoformat(input("Fecha de nacimiento minima: "))
         dobMax = datetime.date.fromisoformat(input("Fecha de nacimiento maxima: "))
         print()
         print("========== Req. 4 Output ==========")
-        #print(cont['traitsPlayer'])
-        #print(mp.get(cont['traitsPlayer'], playerTrait)['value'])
         print("Los jugadores de FIFA encontrados entre el rango " + str(dobMin) + " y " + str(dobMax) + " son: " + str(controller.req4(cont, playerTrait, dobMin, dobMax)))
         print()
         print("Los " + str(controller.req4(cont, playerTrait, dobMin, dobMax)[0]) + " jugadores encontrados son: ")
@@ -137,32 +134,54 @@ while True:
         print(str(controller.req4(cont, playerTrait, dobMin, dobMax)[1]))
         print()
   
+
+    elif int(inputs[0]) == 6:
+        print("========== Req. 5 Input ==========")
+        N = int(float(input("Numero de segmentos del rango: ")))
+        x = int(float(input("Numero de niveles de jugadores: ")))
+        propierty = input("Propiedad del histograma: ").lower()
+        print()
+        print("========== Req. 5 Output ==========")
+        min = om.minKey(cont[propierty])
+        max = om.maxKey(cont[propierty])
+        add = (max-min)/N
+        listSegments = []
+        listPlayers = []
+        listPoints = []
+        conta = 0
+        numTotalPlayer = 0
+        
+        for i in range(0,N):
+            listSegments.append([round(min+(add*i), 3), round(min+(add*(i+1)), 3)])
+
+        for k in lt.iterator(om.keySet(cont[propierty])):
+            numPlayers = lt.size(om.get(cont[propierty], k)['value'])
+
+            if k <= listSegments[conta][1]:
+                numTotalPlayer += numPlayers
+            if k > listSegments[conta][1]:
+                listPlayers.append(numTotalPlayer)
+                numTotalPlayer = 0
+                numTotalPlayer += numPlayers
+                conta+=1
+        
+        while len(listPlayers)<N:
+            listPlayers.append(lt.size(om.get(cont[propierty], k)['value']))
+
+        for j in range(0,N):
+            listPoints.append(listPlayers[j]//x)
+                    
+        print("+---------------------------------------+")
+        print("|bin            | count  |  lvl|  mark  |")
+        print("+=======================================+")
+        for l in range(0, N):
+            print("|"+str(listSegments[l])+ "|" +str(listPlayers[l])+"  |"+str(listPoints[l])+"  |"+str((listPoints[l]*"*"))+"|")
+            print("+---------------------------------------+")
+        print()
+
+
+    elif int(inputs[0]) == 7:
+        print("COMING SOON...")
+
     else:
         sys.exit(0)
-
-#print(mp.get(cont['clubsName'], clubName)['value'])
-        #print(controller.indexSize(mp.get(cont['clubsName'], clubName)['value']))
-
-        #print(om.get(mp.get(cont['clubsName'], clubName)['value'], "2021-06-30"))
-        #print()
-        #print(om.get(mp.get(cont['clubsName'], clubName)['value'], "2021-06-30")['value']['first']) #Esctuctura tipo TAD list#
-
-        #print(controller.keySet(mp.get(cont['clubsName'], clubName)['value']))
-        #keys = controller.keySet(mp.get(cont['clubsName'], clubName)['value'])
-        #print(controller.valueSet(mp.get(cont['clubsName'], clubName)['value']))
-
-        #print(cont['clubsName'])
-        #fecha = om.get(datentry, player['club_joined'])     #Obtenemos la fecha#
-
-                
-
-
-        #print(mp.get(cont['tagsPlayer'], player_tags)['value'])
-        #print(om.values(mapa, wage_eurMin, wage_eurMax))
-        #print(controller.keySet(mp.get(cont['tagsPlayer'], player_tags)['value']))
-        #llavesHash = mp.keySet(cont['tagsPlayer'])
-        #print(llavesHash)
-        #print(om.get(mp.get(cont['tagsPlayer'], player_tags)['value'], 1))
-
-    #a="#Aerial Threat, #Strength"
-    #a.count()

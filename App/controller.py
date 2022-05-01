@@ -22,8 +22,8 @@
 
 import config as cf
 from App import model
-import datetime
 import csv
+
 
 """
 El controlador se encarga de mediar entre la vista y el modelo.
@@ -33,7 +33,6 @@ El controlador se encarga de mediar entre la vista y el modelo.
 # ==============================
 #  Inicializacion del catalogo
 # ==============================
-
 
 def init():
     """
@@ -60,12 +59,20 @@ def loadData(analyzer):
         model.addPositionPlayer(analyzer, player)
         model.addTagsPlayer(analyzer, player)
         model.addTraitsPlayer(analyzer, player)
+        model.addHistogramOverall(analyzer, player)
+        model.addHistogramPotential(analyzer, player)
+        model.addHistogramValue(analyzer, player)
+        model.addHistogramWage(analyzer, player)
+        model.addHistogramAge(analyzer, player)
+        model.addHistogramHeight(analyzer, player)
+        model.addHistogramWeight(analyzer, player)
+        model.addHistogramRelease(analyzer, player)
     return analyzer
+
 
 # ==============================
 #  Funciones para consultas
 # ==============================
-
 
 def playersSize(analyzer):
     """
@@ -117,6 +124,10 @@ def Init_Finit_Players(analyzer):
 
 def req1(analyzer, clubName):
     return model.req1(analyzer, clubName)
+
+def req2(analyzer, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax):
+    return model.req2(analyzer, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax)
+
 
 def req3(analyzer, player_tags, wage_eurMin, wage_eurMax):
     return model.req3(analyzer, player_tags, wage_eurMin, wage_eurMax)
