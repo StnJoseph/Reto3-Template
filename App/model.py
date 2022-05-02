@@ -295,7 +295,10 @@ def updatePotential(map, player):                               #Req5#
     return map
 
 def updateValue(map, player):                                   #Req5#
-    value_eur = int(float(player['value_eur']))
+    if player['value_eur'] != "":
+        value_eur = int(float(player['value_eur']))
+    else:
+        value_eur = 0
     exists = om.contains(map, value_eur) 
 
     if exists == False:
@@ -379,7 +382,10 @@ def updateWeight(map, player):                                  #Req5#
     return map
 
 def updateRelease(map, player):                                 #Req5#
-    release_clause_eur = int(float(player['release_clause_eur']))
+    if player['release_clause_eur'] != "":
+        release_clause_eur = int(float(player['release_clause_eur']))
+    else:
+        release_clause_eur = 0
     exists = om.contains(map, release_clause_eur) 
 
     if exists == False:

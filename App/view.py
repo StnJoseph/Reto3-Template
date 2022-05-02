@@ -45,8 +45,8 @@ def printMenu():
     print("3- Reportar los jugadores de cierta posición en un rango de desempeño, potencial y salario")
     print("4- Reportar los jugadores en un rango salarial y con cierta etiqueta")
     print("5- Reportar los jugadores con un rasgo característico en un periodo de tiempo")
-    print("6- Req. 5")
-    print("7- Req. 6")
+    print("6- Realizar histograma segun segmentos y niveles de una llave")
+    print("7- Bono")
     print("0- Salir")
     print()
 
