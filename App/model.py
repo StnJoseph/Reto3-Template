@@ -1,4 +1,4 @@
-﻿"""
+"""
  * Copyright 2020, Departamento de sistemas y Computación,
  * Universidad de Los Andes
  *
@@ -98,8 +98,8 @@ def thread_cycle():
             finitDate = input('Fecha final de consulta: ')
 
         else:
-            sys.exit(0)
-    sys.exit(0)
+            break #sys.exit(0)
+    #sys.exit(0)
 
 # Construccion de modelos
 
