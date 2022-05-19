@@ -23,7 +23,6 @@
 import config as cf
 from App import model
 import csv
-import math
 
 
 """
@@ -48,93 +47,109 @@ def init():
 #  Funciones para la carga de datos y almacenamiento de datos en los modelos
 # ==============================
 
-def loadData(analyzer):
+
+def loadServices(analyzer, servicesfile):
     """
-    Carga los datos de los archivos CSV en el modelo
+    Carga los datos de los archivos CSV en el modelo.
+    Se crea un arco entre cada par de estaciones que
+    pertenecen al mismo servicio y van en el mismo sentido.
+
+    addRouteConnection crea conexiones entre diferentes rutas
+    servidas en una misma estación.
     """
-    playersfile = cf.data_dir + "fifa-players-2022-utf8-small.csv"
-    input_file = csv.DictReader(open(playersfile, encoding="utf-8"), delimiter=",")
-    for player in input_file:
-        model.addPlayer(analyzer, player)
-        model.addClubPlayer(analyzer, player)
-        model.addPositionPlayer(analyzer, player)
-        model.addTagsPlayer(analyzer, player)
-        model.addTraitsPlayer(analyzer, player)
-        model.addHistogramOverall(analyzer, player)
-        model.addHistogramPotential(analyzer, player)
-        model.addHistogramValue(analyzer, player)
-        model.addHistogramWage(analyzer, player)
-        model.addHistogramAge(analyzer, player)
-        model.addHistogramHeight(analyzer, player)
-        model.addHistogramWeight(analyzer, player)
-        model.addHistogramRelease(analyzer, player)
+    servicesfile = cf.data_dir + servicesfile
+    input_file = csv.DictReader(open(servicesfile, encoding="utf-8"), delimiter=",")
+    lastservice = None
+    
+    for service in input_file:
+        model.addStation(analyzer, service)
+        if lastservice is not None:
+            sameEndStation = lastservice['End Station Id'] == service['End Station Id']
+            sameStation = lastservice['Start Station Id'] == service['Start Station Id']
+            if sameEndStation and not sameStation:
+                model.addStationConnection(analyzer, service)
+        lastservice = service
+    model.addRouteConnections(analyzer)
     return analyzer
+    # TODO joseph
 
 
 # ==============================
 #  Funciones para consultas
 # ==============================
 
-def playersSize(analyzer):
+def totalStops(analyzer):
     """
-    Numero de jugadores leidos
+    Total de paradas de autobus
     """
-    return model.playersSize(analyzer)
+    return model.totalStops(analyzer)
 
 
-def indexHeight(analyzer):
+def totalConnections(analyzer):
     """
-    Altura del indice (arbol)
+    Total de enlaces entre las paradas
     """
-    return model.indexHeight(analyzer)
+    return model.totalConnections(analyzer)
 
 
-def indexSize(analyzer):
+def connectedComponents(analyzer):
     """
-    Numero de nodos en el arbol
+    Numero de componentes fuertemente conectados
     """
-    return model.indexSize(analyzer)
+    return model.connectedComponents(analyzer)
 
-def keySet(analyzer):
+
+def minimumCostPaths(analyzer, initialStation):
     """
-    Lista de llaves
+    Calcula todos los caminos de costo minimo de initialStation a todas
+    las otras estaciones del sistema
     """
-    return model.keySet(analyzer)
+    return model.minimumCostPaths(analyzer, initialStation)
 
-def valueSet(analyzer):
+
+def hasPath(analyzer, destStation):
     """
-    Lista de llaves
+    Informa si existe un camino entre initialStation y destStation
     """
-    return model.valueSet(analyzer)
+    return model.hasPath(analyzer, destStation)
 
-def minKey(analyzer):
+
+def minimumCostPath(analyzer, destStation):
     """
-    La menor llave del arbol
+    Retorna el camino de costo minimo desde initialStation a destStation
     """
-    return model.minKey(analyzer)
+    return model.minimumCostPath(analyzer, destStation)
 
 
-def maxKey(analyzer):
+def searchPaths(analyzer, initialStation, searchMethod):
     """
-    La mayor llave del arbol
+    Calcula todos los recorridos por "dfs" o "bfs" de initialStation a
+    todas las otras estaciones del sistemas
     """
-    return model.maxKey(analyzer)
-
-def Init_Finit_Players(analyzer):
-    return model.Init_Finit_Players(analyzer)
-
-def req1(analyzer, clubName):
-    return model.req1(analyzer, clubName)
-
-def req2(analyzer, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax):
-    return model.req2(analyzer, player_positions, overallMin, overallMax, potentialMin, potentialMax, wage_eurMin, wage_eurMax)
+    return model.searchPaths(analyzer, initialStation, searchMethod)
 
 
-def req3(analyzer, player_tags, wage_eurMin, wage_eurMax):
-    return model.req3(analyzer, player_tags, wage_eurMin, wage_eurMax)
+def hasSearchPath(analyzer, destStation, searchMethod):
+    """
+    Informa si existe un camino entre initialStation y destStation segun
+    el metodo de busqueda ("bfs" o "dfs")
+    """
+    return model.hasSearchPath(analyzer, destStation, searchMethod)
 
-def req4(analyzer, playerTrait, dobMin, dobMax):
-    return model.req4(analyzer, playerTrait, dobMin, dobMax)
+
+def searchPathTo(analyzer, destStation, searchMethod):
+    """
+    Retorna el camino de busqueda entre initialStation y destStation
+    """
+    return model.searchPathTo(analyzer, destStation, searchMethod)
+
+def servedRoutes(analyzer):
+    """
+    Retorna el camino de costo minimo desde initialStation a destStation
+    """
+    maxvert, maxdeg = model.servedRoutes(analyzer)
+    return maxvert, maxdeg
+
 
 # ==============================
 # Funciones de ordenamiento

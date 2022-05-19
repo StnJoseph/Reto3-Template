@@ -26,7 +26,7 @@
 
 import config
 from DISClib.ADT import graph as gr
-from DISClib.ADT import map as m
+from DISClib.ADT import map as mp
 from DISClib.ADT import list as lt
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dijsktra as djk
@@ -35,80 +35,224 @@ from DISClib.Algorithms.Graphs import bfs as bfs
 from DISClib.Utils import error as error
 assert config
 
-"""
-Se define la estructura de un catálogo de videos. El catálogo tendrá dos listas, una para los videos, otra para las categorias de
-los mismos.
-"""
-
-def printMenu():
-    print("\n")
-    print("*******************************************")
-    print("Bienvenido")
-    print("1- Inicializar Analizador")
-    print("2- Cargar información de Toronto Bikeshare")
-    print("3- Comparar bicicletas para las estaciones con más viajes de origen.")
-    print("4- Reconocer los componentes fuertemente conectado del sistema")
-    print("5- Planear una ruta rápida para el usuario.")
-    print("6- Reportar rutas en un rango de fechas para los usuarios anuales")
-    print("7- Planear el mantenimiento preventivo de bicicletas")
-    print("8-  La estación más frecuentada por los visitantes")
-    print("0- Salir")
-    print("*******************************************")
-
-cont = None
-
-def thread_cycle():
-    while True:
-        printMenu()
-        inputs = input('Seleccione una opción para continuar\n>')
-
-        if int(inputs) == 1:
-            print("Inicializando....")
-
-            #cont = controller.init()
-
-        elif int(inputs) == 2:
-            #Requerimiento sin parametros#
-            pass
-
-        elif int(inputs) == 3:
-            intiStation = input('Nombre estación de inicio: ')
-            diponibility = input('Disponibilidad: ')
-            minRuteStops = int(input('Número minimo de estaciones de parada para la ruta: '))
-            maxNumRutes = int(input('Maximo número de rutas de respuesta: '))
-
-        elif int(inputs) == 4:
-            #Requerimiento sin parametros#
-            pass
-
-        elif int(inputs) == 5:
-            initStation = input('Estación de inicio: ')
-            finitStation = input('Estacion de destino: ')
-
-        elif int(inputs) == 6:
-            initDate = input('Fecha inicial de consulta: ')
-            finitDate = input('Fecha final de consulta: ')
-
-        elif int(inputs) == 7:
-            bike_id = int(input('Identificador de la bicicleta en el sistema: '))
-
-        elif int(inputs) == 8:
-            nameStation = input('Nombre de la estacion: ')
-            initDate = input('Fecha inicial de consulta: ')
-            finitDate = input('Fecha final de consulta: ')
-
-        else:
-            break #sys.exit(0)
-    #sys.exit(0)
-
+# =============================================================
 # Construccion de modelos
+# =============================================================
 
+def newAnalyzer():
+    try:
+        analyzer = {
+            'station': None,
+            'connections': None,
+            'vertex': None
+        }
+
+        analyzer['station'] = mp.newMap(numelements=1000,
+                                     maptype='PROBING',
+                                     comparefunction=compareStationIds)
+
+        analyzer['connections'] = gr.newGraph(datastructure='ADJ_LIST',
+                                              directed=True,
+                                              size=35755,
+                                              comparefunction=compareStationIds)
+
+        analyzer['vertex'] =  lt.newList('SINGLE_LINKED', compareIds)
+
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:newAnalyzer')
+
+
+# =============================================================
 # Funciones para agregar informacion al catalogo
+# =============================================================
 
+def addStation(analyzer, service):
+    lt.addLast(analyzer['vertex'], service)
+    return analyzer
+
+def addStationConnection(analyzer, service):
+    try:
+        origin, destination = formatVertex(service)
+        cleanServiceDuration(service)
+
+        duration = float(service['Trip Duration'])
+        addTrip(analyzer, origin)
+        addTrip(analyzer, destination)
+        addConnection(analyzer, origin, destination, duration)
+        #addRouteStation(analyzer, service)
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:addStopConnection')
+
+
+def addTrip(analyzer, id):
+    """
+    Adiciona una estación como un vertice del grafo
+    """
+    try:
+        if not gr.containsVertex(analyzer['connections'], id):
+            gr.insertVertex(analyzer['connections'], id)
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:addstop')
+
+def addConnection(analyzer, origin, destination, distance):
+    """
+    Adiciona un arco entre dos estaciones
+    """
+    edge = gr.getEdge(analyzer['connections'], origin, destination)
+    if edge is None:
+        gr.addEdge(analyzer['connections'], origin, destination, distance)
+    return analyzer
+
+def addRouteStation(analyzer, service):
+    """
+    Agrega a una estacion, una estacion final
+    """
+    entry = mp.get(analyzer['station'], service['Start Station Id'])
+    if entry is None:
+        lstroutes = lt.newList(cmpfunction=compareroutes)
+        lt.addLast(lstroutes, service['End Station Id'])
+        mp.put(analyzer['station'], service['Start Station Id'], lstroutes)
+    else:
+        lstroutes = entry['value']
+        info = service['End Station Id']
+        if lt.isPresent(lstroutes, info) == 0:
+            lt.addLast(lstroutes, info)
+    return analyzer
+
+def addRouteConnections(analyzer):
+    """
+    Por cada vertice (cada estacion) se recorre la lista
+    de rutas servidas en dicha estación y se crean
+    arcos entre ellas para representar el cambio de ruta
+    que se puede realizar en una estación.
+    """
+    lststops = mp.keySet(analyzer['station'])
+    for key in lt.iterator(lststops):
+        lstroutes = mp.get(analyzer['station'], key)['value']
+        prevrout = None
+        for route in lt.iterator(lstroutes):
+            route = key + '-' + route
+            if prevrout is not None:
+                addConnection(analyzer, prevrout, route, 0)
+                addConnection(analyzer, route, prevrout, 0)
+            prevrout = route
+
+
+def addConnection(analyzer, origin, destination, distance):
+    """
+    Adiciona un arco entre dos estaciones
+    """
+    edge = gr.getEdge(analyzer['connections'], origin, destination)
+    if edge is None:
+        table = mp.newMap(numelements=3,
+                                maptype='PROBING',
+                                comparefunction=compareStationIds)
+
+        mp.put(table, "Sumatory", distance)
+        mp.put(table, "Cont", 1)
+        mp.put(table, "Prom", distance)
+
+        gr.addEdge(analyzer['connections'], origin, destination, table)
+
+    else:
+        table = edge['weight']
+        sumatory = mp.get(table, "Sumatory")['value'] + int(distance)
+        cont = mp.get(table, "Cont")['value'] + 1
+        prom = sumatory/cont
+
+        mp.put(table, "Sumatory", sumatory)
+        mp.put(table, "Cont", cont)
+        mp.put(table, "Prom", prom)
+        
+    return analyzer
+
+
+
+# =============================================================
 # Funciones para creacion de datos
+# =============================================================
 
+
+
+# =============================================================
 # Funciones de consulta
+# =============================================================
 
-# Funciones utilizadas para comparar elementos dentro de una lista
+def cleanServiceDuration(service):
+    """
+    En caso de que el archivo tenga un espacio en la
+    distancia, se reemplaza con cero.
+    """
+    if service['Trip Duration'] == '':
+        service['Trip Duration'] = 0
 
+
+def formatVertex(service):
+    """
+    Se formatea el nombre del vertice con:
+    id de la estación inicial
+    """
+    nameInit = int(service['Start Station Id'])
+    nameFinit = int(float(service['End Station Id']))
+    return nameInit, nameFinit
+
+def totalStops(analyzer):
+    """
+    Retorna el total de estaciones (vertices) del grafo
+    """
+    return gr.numVertices(analyzer['connections'])
+
+
+def totalConnections(analyzer):
+    """
+    Retorna el total arcos del grafo
+    """
+    return gr.numEdges(analyzer['connections'])
+
+
+# =============================================================
+# Funciones de comparacion
+# =============================================================
+
+def compareStationIds(station, keyvaluestop):
+    """
+    Compara dos estaciones
+    """
+    stationcode = keyvaluestop['key']
+    if (station == stationcode):
+        return 0
+    elif (station > stationcode):
+        return 1
+    else:
+        return -1
+
+def compareroutes(route1, route2):
+    """
+    Compara dos rutas
+    """
+    if (route1 == route2):
+        return 0
+    elif (route1 > route2):
+        return 1
+    else:
+        return -1
+
+def compareIds(Id1, Id2):
+    """
+    Compara dos Ids
+    """
+    if (Id1 == Id2):
+        return 0
+    elif Id1 > Id2:
+        return 1
+    else:
+        return -1
+
+
+# =============================================================
 # Funciones de ordenamiento
+# =============================================================
+
