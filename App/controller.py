@@ -23,6 +23,7 @@
 import config as cf
 from App import model
 import csv
+from DISClib.ADT import map as m
 
 
 """
@@ -63,13 +64,14 @@ def loadServices(analyzer, servicesfile):
     
     for service in input_file:
         model.addStation(analyzer, service)
+        dicPrueba(service)
         if lastservice is not None:
             sameEndStation = lastservice['End Station Id'] == service['End Station Id']
             sameStation = lastservice['Start Station Id'] == service['Start Station Id']
             if sameEndStation and not sameStation:
                 model.addStationConnection(analyzer, service)
         lastservice = service
-    model.addRouteConnections(analyzer)
+    model.addRouteConnections(analyzer, service)
     return analyzer
     # TODO joseph
 
@@ -154,3 +156,20 @@ def servedRoutes(analyzer):
 # ==============================
 # Funciones de ordenamiento
 # ==============================
+dic = {}
+
+def dicPrueba(service):
+    
+    if service['Start Station Id'] != "" and service['End Station Id'] != "":
+        llaveGo = str(service['Start Station Id']) + '-' + str(int(float(service['End Station Id'])))
+        llaveCome = str(service['End Station Id']) + '-' + str(int(float(service['Start Station Id'])))
+
+        if llaveGo in dic:
+            dic[llaveGo]+=1
+        elif llaveGo[0:4] == llaveCome[0:4] and llaveGo[5:] == llaveCome[5:]:
+            dic[llaveGo]+=1
+        else:
+            dic[llaveGo] = 1
+
+def printDic():
+    print(len(dic))

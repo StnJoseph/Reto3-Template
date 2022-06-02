@@ -73,26 +73,27 @@ def addStation(analyzer, service):
 
 def addStationConnection(analyzer, service):
     try:
-        origin, destination = formatVertex(service)
+        originStation_id, destinationStation_id = formatVertex(service)
         cleanServiceDuration(service)
+        duration = int(service['Trip Duration'])
+        #if originStation_id != "" and destinationStation_id != "":
+        addTrip(analyzer, originStation_id)
+        addTrip(analyzer, destinationStation_id)
 
-        duration = float(service['Trip Duration'])
-        addTrip(analyzer, origin)
-        addTrip(analyzer, destination)
-        addConnection(analyzer, origin, destination, duration)
-        #addRouteStation(analyzer, service)
+        addConnection(analyzer, originStation_id, destinationStation_id, duration)
+        addRouteStation(analyzer, service)
         return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:addStopConnection')
 
 
-def addTrip(analyzer, id):
+def addTrip(analyzer, originStation_id):
     """
     Adiciona una estación como un vertice del grafo
     """
     try:
-        if not gr.containsVertex(analyzer['connections'], id):
-            gr.insertVertex(analyzer['connections'], id)
+        if not gr.containsVertex(analyzer['connections'], originStation_id):
+            gr.insertVertex(analyzer['connections'], originStation_id)
         return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:addstop')
@@ -101,9 +102,12 @@ def addConnection(analyzer, origin, destination, distance):
     """
     Adiciona un arco entre dos estaciones
     """
+    #print(origin)
+    #print(destination)
+    
     edge = gr.getEdge(analyzer['connections'], origin, destination)
-    if edge is None:
-        gr.addEdge(analyzer['connections'], origin, destination, distance)
+    addTableWeigth(analyzer, origin, destination, distance, edge)
+        
     return analyzer
 
 def addRouteStation(analyzer, service):
@@ -112,17 +116,16 @@ def addRouteStation(analyzer, service):
     """
     entry = mp.get(analyzer['station'], service['Start Station Id'])
     if entry is None:
-        lstroutes = lt.newList(cmpfunction=compareroutes)
-        lt.addLast(lstroutes, service['End Station Id'])
+        lstroutes = lt.newList(cmpfunction = compareroutes)
+        lt.addLast(lstroutes, str(int(float(service['End Station Id']))))
         mp.put(analyzer['station'], service['Start Station Id'], lstroutes)
     else:
         lstroutes = entry['value']
-        info = service['End Station Id']
-        if lt.isPresent(lstroutes, info) == 0:
-            lt.addLast(lstroutes, info)
+        if not lt.isPresent(lstroutes, str(int(float(service['End Station Id'])))):
+            lt.addLast(lstroutes, str(int(float(service['End Station Id']))))
     return analyzer
 
-def addRouteConnections(analyzer):
+def addRouteConnections(analyzer, service):
     """
     Por cada vertice (cada estacion) se recorre la lista
     de rutas servidas en dicha estación y se crean
@@ -131,21 +134,23 @@ def addRouteConnections(analyzer):
     """
     lststops = mp.keySet(analyzer['station'])
     for key in lt.iterator(lststops):
-        lstroutes = mp.get(analyzer['station'], key)['value']
-        prevrout = None
-        for route in lt.iterator(lstroutes):
-            route = key + '-' + route
-            if prevrout is not None:
-                addConnection(analyzer, prevrout, route, 0)
-                addConnection(analyzer, route, prevrout, 0)
-            prevrout = route
+        listRoutes = mp.get(analyzer['station'], key)['value']
+        previousRouts = None
+        for route in lt.iterator(listRoutes):
+            if previousRouts is not None:
+                addConnection(analyzer, previousRouts, route, service['Trip Duration'])
+                addConnection(analyzer, route, previousRouts, service['Trip Duration'])
+            previousRouts = route
 
 
-def addConnection(analyzer, origin, destination, distance):
+def addTableWeigth(analyzer, origin, destination, distance, edge):
     """
     Adiciona un arco entre dos estaciones
     """
-    edge = gr.getEdge(analyzer['connections'], origin, destination)
+    #print(origin + ".........................................")
+    #print(destination)
+    dic ={}
+
     if edge is None:
         table = mp.newMap(numelements=3,
                                 maptype='PROBING',
@@ -155,13 +160,17 @@ def addConnection(analyzer, origin, destination, distance):
         mp.put(table, "Cont", 1)
         mp.put(table, "Prom", distance)
 
-        gr.addEdge(analyzer['connections'], origin, destination, table)
+        cost = mp.get(table, 'Prom')['value']
+
+        gr.addEdge(analyzer['connections'], origin, destination, cost)
 
     else:
         table = edge['weight']
-        sumatory = mp.get(table, "Sumatory")['value'] + int(distance)
-        cont = mp.get(table, "Cont")['value'] + 1
-        prom = sumatory/cont
+        #sumatory = mp.get(table, "Sumatory")['value'] + int(distance)
+        cont = mp.get(table, "Cont")['value']
+        value = table*(cont)
+        sumatory = (value + int(distance))
+        prom = sumatory/(cont+1)
 
         mp.put(table, "Sumatory", sumatory)
         mp.put(table, "Cont", cont)
@@ -193,10 +202,10 @@ def cleanServiceDuration(service):
 def formatVertex(service):
     """
     Se formatea el nombre del vertice con:
-    id de la estación inicial
+    id de la estación inicial y id de la estacion final
     """
-    nameInit = int(service['Start Station Id'])
-    nameFinit = int(float(service['End Station Id']))
+    nameInit = service['Start Station Id']
+    nameFinit = str(int(float(service['End Station Id'])))
     return nameInit, nameFinit
 
 def totalStops(analyzer):
@@ -255,4 +264,7 @@ def compareIds(Id1, Id2):
 # =============================================================
 # Funciones de ordenamiento
 # =============================================================
+
+
+
 

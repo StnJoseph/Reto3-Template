@@ -75,11 +75,13 @@ def optionTwo(cont):
     print("========== LOADED DATA ==========")
     print('Numero de vertices: ' + str(numvertex))
     print('Numero de arcos: ' + str(numedges))
-    #print(gr.vertices(cont['connections']))
-    print(cont['station'])
-    print()
+    #print(gr.edges(cont['connections']))
+    #print(cont['station'])
+    #print(cont['vertex'])
+    #print(cont['connections'])
+    print(controller.printDic())
     
-    vertex = gr.vertices(cont['connections'])
+    """vertex = gr.vertices(cont['connections'])
     index = 1
     for v in lt.iterator(vertex):
         if index < 6:
@@ -91,7 +93,7 @@ def optionTwo(cont):
             print(gr.degree(cont['connections'], v))
             print(gr.outdegree(cont['connections'], v))
             print()
-        index+=1
+        index+=1"""
 
 
     """list_First = []
